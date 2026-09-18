@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "1081623550709",
+    "project_id": "projektinz-274ba",
+    "storage_bucket": "projektinz-274ba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1081623550709:android:977e25fd4c051e238883bc",
+        "android_client_info": {
+          "package_name": "com.example.projekt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1081623550709-21r5fk0hdqd446r03bf6tboajpj7nfa2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.projekt",
+            "certificate_hash": "0531d8755eb0dd5983798f3c809da4f64cb3dea7"
+          }
+        },
+        {
+          "client_id": "1081623550709-gso4k60g64ttj76sh6ru8mi3vublrao9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-cnhpMBG-RbfCWjsWlr5IIMSVXCq0K0A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1081623550709-gso4k60g64ttj76sh6ru8mi3vublrao9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1081623550709-fmbc1uno42bnt0am7d13eqommilgo0e0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.projekt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1081623550709:android:eb5bd8e802f2cc508883bc",
+        "android_client_info": {
+          "package_name": "pl.elcpawel.finovo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1081623550709-jd0g59inilj1enk9fuu24g1q6l6hgoma.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pl.elcpawel.finovo",
+            "certificate_hash": "0531d8755eb0dd5983798f3c809da4f64cb3dea7"
+          }
+        },
+        {
+          "client_id": "1081623550709-gso4k60g64ttj76sh6ru8mi3vublrao9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-cnhpMBG-RbfCWjsWlr5IIMSVXCq0K0A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1081623550709-gso4k60g64ttj76sh6ru8mi3vublrao9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1081623550709-fmbc1uno42bnt0am7d13eqommilgo0e0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.projekt"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

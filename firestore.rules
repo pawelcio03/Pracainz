@@ -1,0 +1,754 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(value) {
+      return value is string &&
+        value.size() > 0 &&
+        value.size() <= 120 &&
+        value.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+    }
+
+    function isValidOptionalHttpUrl(value, maxSize) {
+      return value == null ||
+        (
+          value is string &&
+          value.size() > 0 &&
+          value.size() <= maxSize &&
+          value.matches('^https?://\\S+$')
+        );
+    }
+
+    function isValidTransactionPayload() {
+      return request.resource.data.keys().hasOnly([
+          'title',
+          'category',
+          'amount',
+          'date',
+          'type',
+          'goalId',
+          'goalContributionPlanId',
+          'recurringIncomeId',
+          'note',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'title',
+          'category',
+          'amount',
+          'date',
+          'type',
+          'updatedAt',
+        ]) &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() <= 80 &&
+        request.resource.data.category is string &&
+        request.resource.data.category.size() > 0 &&
+        request.resource.data.category.size() <= 40 &&
+        request.resource.data.amount is number &&
+        request.resource.data.amount > 0 &&
+        request.resource.data.amount < 100000000 &&
+        request.resource.data.date is timestamp &&
+        request.resource.data.type is string &&
+        request.resource.data.type in ['income', 'expense', 'transfer'] &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('goalId' in request.resource.data) ||
+          request.resource.data.goalId == null ||
+          (
+            request.resource.data.goalId is string &&
+            request.resource.data.goalId.size() > 0 &&
+            request.resource.data.goalId.size() <= 128
+          )
+        ) &&
+        (
+          !('goalContributionPlanId' in request.resource.data) ||
+          request.resource.data.goalContributionPlanId == null ||
+          (
+            request.resource.data.goalContributionPlanId is string &&
+            request.resource.data.goalContributionPlanId.size() > 0 &&
+            request.resource.data.goalContributionPlanId.size() <= 128
+          )
+        ) &&
+        (
+          !('recurringIncomeId' in request.resource.data) ||
+          request.resource.data.recurringIncomeId == null ||
+          (
+            request.resource.data.recurringIncomeId is string &&
+            request.resource.data.recurringIncomeId.size() > 0 &&
+            request.resource.data.recurringIncomeId.size() <= 128
+          )
+        ) &&
+        (
+          !('note' in request.resource.data) ||
+          request.resource.data.note == null ||
+          (
+            request.resource.data.note is string &&
+            request.resource.data.note.size() <= 280
+          )
+        ) &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    function isValidGoalContributionPlanPayload() {
+      return request.resource.data.keys().hasOnly([
+          'goalId',
+          'name',
+          'amount',
+          'interval',
+          'dayOfMonth',
+          'startDate',
+          'isActive',
+          'lastGeneratedPeriodKey',
+          'note',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'goalId',
+          'name',
+          'amount',
+          'interval',
+          'dayOfMonth',
+          'startDate',
+          'isActive',
+          'updatedAt',
+        ]) &&
+        request.resource.data.goalId is string &&
+        request.resource.data.goalId.size() > 0 &&
+        request.resource.data.goalId.size() <= 128 &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 80 &&
+        request.resource.data.amount is number &&
+        request.resource.data.amount > 0 &&
+        request.resource.data.amount < 100000000 &&
+        request.resource.data.interval is string &&
+        request.resource.data.interval in ['monthly', 'quarterly', 'yearly'] &&
+        request.resource.data.dayOfMonth is int &&
+        request.resource.data.dayOfMonth >= 1 &&
+        request.resource.data.dayOfMonth <= 31 &&
+        request.resource.data.startDate is timestamp &&
+        request.resource.data.isActive is bool &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('lastGeneratedPeriodKey' in request.resource.data) ||
+          request.resource.data.lastGeneratedPeriodKey == null ||
+          (
+            request.resource.data.lastGeneratedPeriodKey is string &&
+            request.resource.data.lastGeneratedPeriodKey.matches('^\\d{4}-\\d{2}$')
+          )
+        ) &&
+        (
+          !('note' in request.resource.data) ||
+          request.resource.data.note == null ||
+          (
+            request.resource.data.note is string &&
+            request.resource.data.note.size() <= 280
+          )
+        ) &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    function isValidRecurringIncomePayload() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'category',
+          'amount',
+          'payday',
+          'startDate',
+          'isActive',
+          'lastGeneratedMonthKey',
+          'note',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'name',
+          'category',
+          'amount',
+          'payday',
+          'startDate',
+          'isActive',
+          'updatedAt',
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 80 &&
+        request.resource.data.category is string &&
+        request.resource.data.category.size() > 0 &&
+        request.resource.data.category.size() <= 40 &&
+        request.resource.data.amount is number &&
+        request.resource.data.amount > 0 &&
+        request.resource.data.amount < 100000000 &&
+        request.resource.data.payday is int &&
+        request.resource.data.payday >= 1 &&
+        request.resource.data.payday <= 31 &&
+        request.resource.data.startDate is timestamp &&
+        request.resource.data.isActive is bool &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('lastGeneratedMonthKey' in request.resource.data) ||
+          request.resource.data.lastGeneratedMonthKey == null ||
+          (
+            request.resource.data.lastGeneratedMonthKey is string &&
+            request.resource.data.lastGeneratedMonthKey.matches('^\\d{4}-\\d{2}$')
+          )
+        ) &&
+        (
+          !('note' in request.resource.data) ||
+          request.resource.data.note == null ||
+          (
+            request.resource.data.note is string &&
+            request.resource.data.note.size() <= 280
+          )
+        ) &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    function isValidBudgetPayload() {
+      return request.resource.data.keys().hasOnly([
+          'category',
+          'limit',
+          'periodStart',
+          'periodKey',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'category',
+          'limit',
+          'periodStart',
+          'periodKey',
+          'updatedAt',
+        ]) &&
+        request.resource.data.category is string &&
+        request.resource.data.category.size() > 0 &&
+        request.resource.data.category.size() <= 40 &&
+        request.resource.data.limit is number &&
+        request.resource.data.limit > 0 &&
+        request.resource.data.limit < 100000000 &&
+        request.resource.data.periodStart is timestamp &&
+        request.resource.data.periodKey is string &&
+        request.resource.data.periodKey.size() == 7 &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    function isValidCategoryPayload() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'type',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'name',
+          'type',
+          'updatedAt',
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 40 &&
+        request.resource.data.type is string &&
+        request.resource.data.type in ['income', 'expense', 'transfer'] &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    function isValidUserProfilePayload() {
+      return request.resource.data.keys().hasOnly([
+          'displayName',
+          'email',
+          'photoUrl',
+          'customPhotoUrl',
+          'createdAt',
+          'lastSignInAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'displayName',
+          'email',
+          'updatedAt',
+        ]) &&
+        request.resource.data.displayName is string &&
+        request.resource.data.displayName.size() > 0 &&
+        request.resource.data.displayName.size() <= 60 &&
+        isValidEmail(request.resource.data.email) &&
+        (
+          !('photoUrl' in request.resource.data) ||
+          isValidOptionalHttpUrl(request.resource.data.photoUrl, 500)
+        ) &&
+        (
+          !('customPhotoUrl' in request.resource.data) ||
+          isValidOptionalHttpUrl(request.resource.data.customPhotoUrl, 500)
+        ) &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        ) &&
+        (
+          !('lastSignInAt' in request.resource.data) ||
+          request.resource.data.lastSignInAt is timestamp
+        );
+    }
+
+    function isValidGoalPayload() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'targetAmount',
+          'savedAmount',
+          'deadline',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'name',
+          'targetAmount',
+          'savedAmount',
+          'deadline',
+          'updatedAt',
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 80 &&
+        request.resource.data.targetAmount is number &&
+        request.resource.data.targetAmount > 0 &&
+        request.resource.data.targetAmount < 100000000 &&
+        request.resource.data.savedAmount is number &&
+        request.resource.data.savedAmount >= 0 &&
+        request.resource.data.savedAmount < 100000000 &&
+        request.resource.data.deadline is timestamp &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    function isValidInvestmentPayload() {
+      return request.resource.data.keys().hasOnly([
+          'assetType',
+          'symbol',
+          'name',
+          'units',
+          'buyPrice',
+          'currentPrice',
+          'lastPriceUpdateAt',
+          'lastPriceDate',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'assetType',
+          'symbol',
+          'name',
+          'units',
+          'buyPrice',
+          'currentPrice',
+          'updatedAt',
+        ]) &&
+        request.resource.data.assetType is string &&
+        request.resource.data.assetType in [
+          'stock',
+          'etf',
+          'bond',
+          'fund',
+          'crypto',
+          'other',
+        ] &&
+        request.resource.data.symbol is string &&
+        request.resource.data.symbol.size() <= 24 &&
+        (
+          request.resource.data.assetType in ['crypto']
+            ? request.resource.data.symbol.size() > 0
+            : true
+        ) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 80 &&
+        request.resource.data.units is number &&
+        request.resource.data.units > 0 &&
+        request.resource.data.units < 100000000 &&
+        request.resource.data.buyPrice is number &&
+        request.resource.data.buyPrice >= 0 &&
+        request.resource.data.buyPrice < 100000000 &&
+        request.resource.data.currentPrice is number &&
+        request.resource.data.currentPrice >= 0 &&
+        request.resource.data.currentPrice < 100000000 &&
+        (
+          !('lastPriceUpdateAt' in request.resource.data) ||
+          request.resource.data.lastPriceUpdateAt == null ||
+          request.resource.data.lastPriceUpdateAt is timestamp
+        ) &&
+        (
+          !('lastPriceDate' in request.resource.data) ||
+          request.resource.data.lastPriceDate == null ||
+          request.resource.data.lastPriceDate is timestamp
+        ) &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    function isValidInvestmentPriceHistoryPayload() {
+      return request.resource.data.keys().hasOnly([
+          'investmentId',
+          'closePrice',
+          'priceDate',
+          'recordedAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'investmentId',
+          'closePrice',
+          'priceDate',
+          'recordedAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.investmentId is string &&
+        request.resource.data.investmentId.size() > 0 &&
+        request.resource.data.investmentId.size() <= 128 &&
+        request.resource.data.closePrice is number &&
+        request.resource.data.closePrice >= 0 &&
+        request.resource.data.closePrice < 100000000 &&
+        request.resource.data.priceDate is timestamp &&
+        request.resource.data.recordedAt is timestamp &&
+        request.resource.data.updatedAt is timestamp;
+    }
+
+    function isValidMonthlyReportPayload() {
+        return request.resource.data.keys().hasOnly([
+          'periodStart',
+          'generatedAt',
+          'incomeTotal',
+          'expenseTotal',
+          'transferTotal',
+          'transactionCount',
+          'budgetCount',
+          'overspentBudgetCount',
+          'budgetLimitTotal',
+          'budgetSpentTotal',
+          'investmentValue',
+          'investmentProfit',
+          'transferRate',
+          'activeGoals',
+          'completedGoals',
+          'atRiskGoals',
+          'topExpenseCategory',
+          'isClosed',
+          'closedAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'periodStart',
+          'generatedAt',
+          'incomeTotal',
+          'expenseTotal',
+          'transferTotal',
+          'transactionCount',
+          'budgetCount',
+          'overspentBudgetCount',
+          'budgetLimitTotal',
+          'budgetSpentTotal',
+          'investmentValue',
+          'investmentProfit',
+          'transferRate',
+          'activeGoals',
+          'completedGoals',
+          'atRiskGoals',
+          'isClosed',
+          'updatedAt',
+        ]) &&
+        request.resource.data.periodStart is timestamp &&
+        request.resource.data.generatedAt is timestamp &&
+        request.resource.data.incomeTotal is number &&
+        request.resource.data.incomeTotal >= 0 &&
+        request.resource.data.incomeTotal < 1000000000 &&
+        request.resource.data.expenseTotal is number &&
+        request.resource.data.expenseTotal >= 0 &&
+        request.resource.data.expenseTotal < 1000000000 &&
+        request.resource.data.transferTotal is number &&
+        request.resource.data.transferTotal >= 0 &&
+        request.resource.data.transferTotal < 1000000000 &&
+        request.resource.data.transactionCount is int &&
+        request.resource.data.transactionCount >= 0 &&
+        request.resource.data.transactionCount < 1000000 &&
+        request.resource.data.budgetCount is int &&
+        request.resource.data.budgetCount >= 0 &&
+        request.resource.data.budgetCount < 1000000 &&
+        request.resource.data.overspentBudgetCount is int &&
+        request.resource.data.overspentBudgetCount >= 0 &&
+        request.resource.data.overspentBudgetCount <= request.resource.data.budgetCount &&
+        request.resource.data.budgetLimitTotal is number &&
+        request.resource.data.budgetLimitTotal >= 0 &&
+        request.resource.data.budgetLimitTotal < 1000000000 &&
+        request.resource.data.budgetSpentTotal is number &&
+        request.resource.data.budgetSpentTotal >= 0 &&
+        request.resource.data.budgetSpentTotal < 1000000000 &&
+        request.resource.data.investmentValue is number &&
+        request.resource.data.investmentValue >= 0 &&
+        request.resource.data.investmentValue < 1000000000 &&
+        request.resource.data.investmentProfit is number &&
+        request.resource.data.investmentProfit > -1000000000 &&
+        request.resource.data.investmentProfit < 1000000000 &&
+        request.resource.data.transferRate is number &&
+        request.resource.data.transferRate >= 0 &&
+        request.resource.data.transferRate <= 1 &&
+        request.resource.data.activeGoals is int &&
+        request.resource.data.activeGoals >= 0 &&
+        request.resource.data.activeGoals < 1000000 &&
+        request.resource.data.completedGoals is int &&
+        request.resource.data.completedGoals >= 0 &&
+        request.resource.data.completedGoals < 1000000 &&
+        request.resource.data.atRiskGoals is int &&
+        request.resource.data.atRiskGoals >= 0 &&
+        request.resource.data.atRiskGoals < 1000000 &&
+        request.resource.data.isClosed is bool &&
+        (
+          request.resource.data.isClosed == true
+            ? (
+                'closedAt' in request.resource.data &&
+                request.resource.data.closedAt is timestamp
+              )
+            : (
+                !('closedAt' in request.resource.data) ||
+                request.resource.data.closedAt == null
+              )
+        ) &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('topExpenseCategory' in request.resource.data) ||
+          request.resource.data.topExpenseCategory == null ||
+          (
+            request.resource.data.topExpenseCategory is string &&
+            request.resource.data.topExpenseCategory.size() > 0 &&
+            request.resource.data.topExpenseCategory.size() <= 40
+          )
+        );
+    }
+
+    function isValidSubscriptionPayload() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'category',
+          'amount',
+          'billingCycle',
+          'nextBillingDate',
+          'isActive',
+          'note',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'name',
+          'category',
+          'amount',
+          'billingCycle',
+          'nextBillingDate',
+          'isActive',
+          'updatedAt',
+        ]) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 80 &&
+        request.resource.data.category is string &&
+        request.resource.data.category.size() > 0 &&
+        request.resource.data.category.size() <= 40 &&
+        request.resource.data.amount is number &&
+        request.resource.data.amount > 0 &&
+        request.resource.data.amount < 100000000 &&
+        request.resource.data.billingCycle is string &&
+        request.resource.data.billingCycle in ['monthly', 'quarterly', 'yearly'] &&
+        request.resource.data.nextBillingDate is timestamp &&
+        request.resource.data.isActive is bool &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('note' in request.resource.data) ||
+          request.resource.data.note == null ||
+          (
+            request.resource.data.note is string &&
+            request.resource.data.note.size() <= 280
+          )
+        ) &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    function isValidReportArchivePayload() {
+      return request.resource.data.keys().hasOnly([
+          'reportId',
+          'filename',
+          'format',
+          'periodStart',
+          'uploadedAt',
+          'sizeBytes',
+          'contentType',
+          'storagePath',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        request.resource.data.keys().hasAll([
+          'filename',
+          'format',
+          'periodStart',
+          'uploadedAt',
+          'sizeBytes',
+          'contentType',
+          'storagePath',
+          'updatedAt',
+        ]) &&
+        (
+          !('reportId' in request.resource.data) ||
+          request.resource.data.reportId == null ||
+          (
+            request.resource.data.reportId is string &&
+            request.resource.data.reportId.size() > 0 &&
+            request.resource.data.reportId.size() <= 128
+          )
+        ) &&
+        request.resource.data.filename is string &&
+        request.resource.data.filename.size() > 0 &&
+        request.resource.data.filename.size() <= 200 &&
+        request.resource.data.format is string &&
+        request.resource.data.format in ['csv', 'pdf'] &&
+        request.resource.data.periodStart is timestamp &&
+        request.resource.data.uploadedAt is timestamp &&
+        request.resource.data.sizeBytes is int &&
+        request.resource.data.sizeBytes > 0 &&
+        request.resource.data.sizeBytes < 50000000 &&
+        request.resource.data.contentType is string &&
+        request.resource.data.contentType.size() > 0 &&
+        request.resource.data.contentType.size() <= 120 &&
+        request.resource.data.storagePath is string &&
+        request.resource.data.storagePath.size() > 0 &&
+        request.resource.data.storagePath.size() <= 260 &&
+        request.resource.data.updatedAt is timestamp &&
+        (
+          !('createdAt' in request.resource.data) ||
+          request.resource.data.createdAt is timestamp
+        );
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfilePayload();
+      allow update: if isOwner(userId) && isValidUserProfilePayload();
+      allow delete: if false;
+    }
+
+    match /users/{userId}/transactions/{transactionId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidTransactionPayload();
+      allow update: if isOwner(userId) && isValidTransactionPayload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/budgets/{budgetId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidBudgetPayload();
+      allow update: if isOwner(userId) && isValidBudgetPayload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/categories/{categoryId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidCategoryPayload();
+      allow update: if isOwner(userId) && isValidCategoryPayload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/goals/{goalId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidGoalPayload();
+      allow update: if isOwner(userId) && isValidGoalPayload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/investments/{investmentId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidInvestmentPayload();
+      allow update: if isOwner(userId) && isValidInvestmentPayload();
+      allow delete: if isOwner(userId);
+
+      match /priceHistory/{pricePointId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidInvestmentPriceHistoryPayload();
+        allow update: if isOwner(userId) && isValidInvestmentPriceHistoryPayload();
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    match /users/{userId}/monthlyReports/{reportId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidMonthlyReportPayload();
+      allow update: if isOwner(userId) &&
+        isValidMonthlyReportPayload() &&
+        !resource.data.isClosed;
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/dailyPortfolioSnapshots/{snapshotId} {
+      allow read: if isOwner(userId);
+      allow create, update, delete: if false;
+    }
+
+    match /users/{userId}/subscriptions/{subscriptionId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidSubscriptionPayload();
+      allow update: if isOwner(userId) && isValidSubscriptionPayload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/recurringIncomes/{recurringIncomeId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidRecurringIncomePayload();
+      allow update: if isOwner(userId) && isValidRecurringIncomePayload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/goalContributionPlans/{planId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidGoalContributionPlanPayload();
+      allow update: if isOwner(userId) && isValidGoalContributionPlanPayload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/reportArchives/{archiveId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidReportArchivePayload();
+      allow update: if isOwner(userId) && isValidReportArchivePayload();
+      allow delete: if isOwner(userId);
+    }
+  }
+}

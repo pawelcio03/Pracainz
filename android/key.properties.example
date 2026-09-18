@@ -1,0 +1,4 @@
+storeFile=../keystore/finovo-release.jks
+storePassword=replace-with-your-store-password
+keyAlias=finovo
+keyPassword=replace-with-your-key-password
